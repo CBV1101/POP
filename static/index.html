@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>POP</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="nav">
+        <a class="logo" href="/" id="home">POP</a>
+        <p class="logo-sub">Primitives, Opportunities, Priorities</p>
+        <p class="nav-label">Workspace</p>
+        <button type="button" class="nav-item" id="nav-requests" data-mode="requests">
+          <span class="nav-name">Primitives</span>
+          <span class="nav-help">Asks, smallest build</span>
+        </button>
+        <button type="button" class="nav-item" id="nav-feedback" data-mode="feedback">
+          <span class="nav-name">Opportunities</span>
+          <span class="nav-help">Messy feedback, ranked</span>
+        </button>
+        <button type="button" class="nav-item" id="nav-priority" data-mode="priority">
+          <span class="nav-name">Priorities</span>
+          <span class="nav-help">Capacity, RICE, rank</span>
+        </button>
+      </aside>
+
+      <div class="main">
+        <header class="bar">
+          <p class="bar-title" id="bar-title">Choose a workspace</p>
+          <button class="text-btn" id="back" type="button" hidden>Start over</button>
+        </header>
+
+        <section class="chooser" id="chooser">
+          <button type="button" class="choice" data-mode="requests">
+            <span class="choice-index">01</span>
+            <span class="choice-title">Smallest primitive</span>
+            <span class="choice-body"
+              >It finds the primitive among customer asks: the smallest build that can satisfy the whole pile, instead of shipping each requested feature.</span
+            >
+            <span class="choice-go">Open workspace</span>
+          </button>
+          <button type="button" class="choice" data-mode="feedback">
+            <span class="choice-index">02</span>
+            <span class="choice-title">Ranked opportunities</span>
+            <span class="choice-body"
+              >It turns messy feedback into ranked opportunities, and it keeps every claim tied to source quotes instead of collapsing them into a summary.</span
+            >
+            <span class="choice-go">Open workspace</span>
+          </button>
+          <button type="button" class="choice" data-mode="priority">
+            <span class="choice-index">03</span>
+            <span class="choice-title">Priorities</span>
+            <span class="choice-body"
+              >It ranks the backlog against how loaded you are, using RICE, revenue, ROI, go/no-go deals, churn if skipped, tech debt, and urgency — then draws the cut-line for what to build first.</span
+            >
+            <span class="choice-go">Open workspace</span>
+          </button>
+        </section>
+
+        <section class="bench" id="start" hidden>
+          <p class="bench-kicker" id="kicker"></p>
+          <h1 id="headline"></h1>
+          <p class="bench-lede" id="lede"></p>
+          <div class="connect" id="connect" hidden>
+            <p class="connect-label">Import from your backlog</p>
+            <div class="fields">
+              <label>
+                Platform
+                <select id="provider">
+                  <option value="linear">Linear</option>
+                  <option value="github">GitHub Issues</option>
+                  <option value="jira">Jira</option>
+                </select>
+              </label>
+              <label id="field-host" hidden>
+                Jira site
+                <input id="jira-host" type="text" placeholder="your-team.atlassian.net" autocomplete="off" />
+              </label>
+              <label id="field-email" hidden>
+                Jira email
+                <input id="jira-email" type="email" placeholder="you@company.com" autocomplete="off" />
+              </label>
+              <label id="field-scope" hidden>
+                <span id="scope-label">Repo</span>
+                <input id="scope" type="text" placeholder="owner/repo" autocomplete="off" />
+              </label>
+              <label>
+                Token
+                <input id="token" type="password" placeholder="Personal API key" autocomplete="off" />
+              </label>
+            </div>
+            <div class="source-tools">
+              <button class="ghost" id="import" type="button">Import open items</button>
+              <span class="hint" id="connect-hint">Linear personal API key. Used once for this import, not saved on the server.</span>
+            </div>
+          </div>
+          <div class="priority-panel" id="priority-panel" hidden>
+            <div class="fields">
+              <label>
+                Capacity (%)
+                <input id="capacity" type="number" min="0" max="100" step="1" value="50" />
+              </label>
+            </div>
+            <p class="hint">How loaded the team is. 50% means half the team is free — a 40% item can run with a 10% item at the same time if the 10% item finishes no later.</p>
+            <div class="board-wrap">
+              <table class="board">
+                <thead>
+                  <tr>
+                    <th class="title-cell">Backlog item</th>
+                    <th>Kind</th>
+                    <th>Reach</th>
+                    <th>Impact</th>
+                    <th>Conf. %</th>
+                    <th>Effort days</th>
+                    <th>Takes %</th>
+                    <th>Revenue $</th>
+                    <th>ROI ×</th>
+                    <th>Deal</th>
+                    <th>Deal $</th>
+                    <th>Churn if skipped</th>
+                    <th>ARR at risk $</th>
+                    <th>Debt added</th>
+                    <th>Debt reduced</th>
+                    <th>Blocks others</th>
+                    <th>Compliance</th>
+                    <th>Time-sensitive</th>
+                    <th>Blocked by other work</th>
+                  </tr>
+                </thead>
+                <tbody id="board-body"></tbody>
+              </table>
+            </div>
+            <div class="source-tools">
+              <button class="ghost" id="add-row" type="button">Add item</button>
+            </div>
+          </div>
+          <div class="source" id="source">
+            <div class="source-head">
+              <span id="source-label">Source material</span>
+              <div class="listen" id="listen" hidden>
+                <span class="rec-dot" aria-hidden="true"></span>
+                <span id="listen-status">Listening</span>
+                <span class="interim" id="interim"></span>
+                <button class="text-btn" id="stop" type="button">Stop</button>
+              </div>
+            </div>
+            <textarea id="draft"></textarea>
+            <div class="source-tools">
+              <button class="ghost" id="record" type="button">Record interview</button>
+            </div>
+          </div>
+          <p class="error" id="error" hidden></p>
+          <div class="bench-run">
+            <button class="primary" id="run" type="button">Run</button>
+            <button class="text-btn" id="sample" type="button">Load sample</button>
+          </div>
+        </section>
+
+        <div class="results" id="results" hidden>
+          <nav class="list" id="list"></nav>
+          <article class="story" id="story"></article>
+        </div>
+      </div>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+</html>
