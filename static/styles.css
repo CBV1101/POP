@@ -114,6 +114,88 @@ a { color: inherit; text-decoration: none; }
   justify-content: space-between;
   padding: 16px 28px;
   border-bottom: 1px solid var(--line);
+  position: relative;
+}
+
+.bar-lead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.back-btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  padding: 6px 12px;
+  font-size: 13px;
+  flex: 0 0 auto;
+}
+
+.back-btn:hover { border-color: var(--ink); }
+
+.app[data-mode="requests"] { --accent: var(--m1); }
+.app[data-mode="feedback"] { --accent: var(--m2); }
+.app[data-mode="priority"] { --accent: var(--m3); }
+
+.app[data-mode] .bar {
+  border-bottom-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+}
+
+.app[data-mode] .bar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+}
+
+.app[data-mode] .back-btn {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+
+.app[data-mode] .back-btn:hover {
+  border-color: var(--accent);
+}
+
+.app[data-mode] .bench-kicker,
+.app[data-mode] .kicker {
+  color: var(--accent);
+}
+
+.app[data-mode] .primary {
+  background: var(--accent);
+}
+
+.app[data-mode] .source,
+.app[data-mode] .connect,
+.app[data-mode] .board-wrap {
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--line));
+}
+
+.app[data-mode] .fields input:focus,
+.app[data-mode] .fields select:focus,
+.app[data-mode] .source textarea:focus,
+.app[data-mode] .board input:focus,
+.app[data-mode] .board select:focus {
+  outline-color: var(--accent);
+}
+
+.app[data-mode] .item.active {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.app[data-mode] .plan-num {
+  color: var(--accent);
+}
+
+.app[data-mode] .tab.on {
+  color: var(--accent);
+  box-shadow: inset 0 -1px 0 var(--accent);
 }
 
 .bar-title {
@@ -654,6 +736,7 @@ a { color: inherit; text-decoration: none; }
 .results[hidden],
 .error[hidden],
 .text-btn[hidden],
+.back-btn[hidden],
 .connect[hidden],
 .fields label[hidden],
 .priority-panel[hidden],

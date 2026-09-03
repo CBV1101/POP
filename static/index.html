@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="app">
+    <div class="app" id="shell">
       <aside class="nav">
         <a class="logo" href="/" id="home" aria-label="POP">
           <span class="mark m1">P</span><span class="mark m2">O</span><span class="mark m3">P</span>
@@ -30,8 +30,10 @@
 
       <div class="main">
         <header class="bar">
-          <p class="bar-title" id="bar-title">Choose a workspace</p>
-          <button class="text-btn" id="back" type="button" hidden>Start over</button>
+          <div class="bar-lead">
+            <button class="back-btn" id="back" type="button" hidden>Back</button>
+            <p class="bar-title" id="bar-title">Choose a workspace</p>
+          </div>
         </header>
 
         <section class="chooser" id="chooser">
