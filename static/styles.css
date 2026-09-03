@@ -25,7 +25,10 @@ a { color: inherit; text-decoration: none; }
   min-height: 100vh;
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr);
+  padding-bottom: 52px;
 }
+
+.app.glossary-open { padding-bottom: 200px; }
 
 .nav {
   border-right: 1px solid var(--line);
@@ -310,6 +313,76 @@ a { color: inherit; text-decoration: none; }
 
 .when-now { color: var(--ink); }
 .when-later { color: var(--muted); }
+
+.board th[data-define] { cursor: help; }
+
+.define {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  background: #fff;
+  border-top: 1px solid var(--line);
+}
+
+.define-toggle {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  border: 0;
+  background: #fff;
+  text-align: left;
+  padding: 12px 28px;
+  color: inherit;
+}
+
+.define-kicker {
+  font-size: 12px;
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+
+.define-current {
+  font-size: 13px;
+  color: var(--ink);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.define-body {
+  padding: 0 28px 16px;
+  max-width: 720px;
+}
+
+.define-body label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.define-body select {
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 8px 10px;
+  color: var(--ink);
+  max-width: 320px;
+}
+
+.define-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.define-body[hidden] { display: none !important; }
 
 .bench-run {
   margin-top: 16px;

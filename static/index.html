@@ -68,7 +68,7 @@
             <div class="fields">
               <label>
                 Platform
-                <select id="provider">
+                <select id="provider" data-define="provider">
                   <option value="linear">Linear</option>
                   <option value="github">GitHub Issues</option>
                   <option value="jira">Jira</option>
@@ -76,19 +76,19 @@
               </label>
               <label id="field-host" hidden>
                 Jira site
-                <input id="jira-host" type="text" placeholder="your-team.atlassian.net" autocomplete="off" />
+                <input id="jira-host" type="text" placeholder="your-team.atlassian.net" autocomplete="off" data-define="jiraHost" />
               </label>
               <label id="field-email" hidden>
                 Jira email
-                <input id="jira-email" type="email" placeholder="you@company.com" autocomplete="off" />
+                <input id="jira-email" type="email" placeholder="you@company.com" autocomplete="off" data-define="jiraEmail" />
               </label>
               <label id="field-scope" hidden>
                 <span id="scope-label">Repo</span>
-                <input id="scope" type="text" placeholder="owner/repo" autocomplete="off" />
+                <input id="scope" type="text" placeholder="owner/repo" autocomplete="off" data-define="scope" />
               </label>
               <label>
                 Token
-                <input id="token" type="password" placeholder="Personal API key" autocomplete="off" />
+                <input id="token" type="password" placeholder="Personal API key" autocomplete="off" data-define="token" />
               </label>
             </div>
             <div class="source-tools">
@@ -100,7 +100,7 @@
             <div class="fields">
               <label>
                 Capacity (%)
-                <input id="capacity" type="number" min="0" max="100" step="1" value="50" />
+                <input id="capacity" type="number" min="0" max="100" step="1" value="50" data-define="capacity" />
               </label>
             </div>
             <p class="hint">How loaded the team is. 50% means half the team is free — a 40% item can run with a 10% item at the same time if the 10% item finishes no later.</p>
@@ -108,25 +108,25 @@
               <table class="board">
                 <thead>
                   <tr>
-                    <th class="title-cell">Backlog item</th>
-                    <th>Kind</th>
-                    <th>Reach</th>
-                    <th>Impact</th>
-                    <th>Conf. %</th>
-                    <th>Effort days</th>
-                    <th>Takes %</th>
-                    <th>Revenue $</th>
-                    <th>ROI ×</th>
-                    <th>Deal</th>
-                    <th>Deal $</th>
-                    <th>Churn if skipped</th>
-                    <th>ARR at risk $</th>
-                    <th>Debt added</th>
-                    <th>Debt reduced</th>
-                    <th>Blocks others</th>
-                    <th>Compliance</th>
-                    <th>Time-sensitive</th>
-                    <th>Blocked by other work</th>
+                    <th class="title-cell" data-define="title">Backlog item</th>
+                    <th data-define="workType">Kind</th>
+                    <th data-define="reach">Reach</th>
+                    <th data-define="impact">Impact</th>
+                    <th data-define="confidence">Conf. %</th>
+                    <th data-define="effort">Effort days</th>
+                    <th data-define="loadPct">Takes %</th>
+                    <th data-define="revenue">Revenue $</th>
+                    <th data-define="roi">ROI ×</th>
+                    <th data-define="deal">Deal</th>
+                    <th data-define="dealValue">Deal $</th>
+                    <th data-define="churn">Churn if skipped</th>
+                    <th data-define="churnArr">ARR at risk $</th>
+                    <th data-define="debtAdded">Debt added</th>
+                    <th data-define="debtReduced">Debt reduced</th>
+                    <th data-define="blocksOthers">Blocks others</th>
+                    <th data-define="compliance">Compliance</th>
+                    <th data-define="timeSensitive">Time-sensitive</th>
+                    <th data-define="blockedBy">Blocked by other work</th>
                   </tr>
                 </thead>
                 <tbody id="board-body"></tbody>
@@ -146,7 +146,7 @@
                 <button class="text-btn" id="stop" type="button">Stop</button>
               </div>
             </div>
-            <textarea id="draft"></textarea>
+            <textarea id="draft" data-define="draft"></textarea>
             <div class="source-tools">
               <button class="ghost" id="record" type="button">Record interview</button>
             </div>
@@ -162,6 +162,19 @@
           <nav class="list" id="list"></nav>
           <article class="story" id="story"></article>
         </div>
+      </div>
+    </div>
+    <div class="define" id="define">
+      <button type="button" class="define-toggle" id="define-toggle" aria-expanded="false">
+        <span class="define-kicker">Definitions</span>
+        <span class="define-current" id="define-current">Click a field to see what it means</span>
+      </button>
+      <div class="define-body" id="define-body" hidden>
+        <label>
+          Term
+          <select id="define-pick"></select>
+        </label>
+        <p class="define-text" id="define-text">Every input in POP has a short definition here. Click Conf. %, Capacity, Deal, or any other field.</p>
       </div>
     </div>
     <script src="/app.js"></script>

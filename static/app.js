@@ -100,6 +100,12 @@ const els = {
   boardBody: document.getElementById("board-body"),
   addRow: document.getElementById("add-row"),
   capacity: document.getElementById("capacity"),
+  define: document.getElementById("define"),
+  defineToggle: document.getElementById("define-toggle"),
+  defineBody: document.getElementById("define-body"),
+  definePick: document.getElementById("define-pick"),
+  defineText: document.getElementById("define-text"),
+  defineCurrent: document.getElementById("define-current"),
 };
 
 const recorder = {
@@ -237,6 +243,139 @@ function priorityContext() {
   return {
     capacity: els.capacity.value,
   };
+}
+
+const DEFINITIONS = {
+  capacity: {
+    label: "Capacity (%)",
+    text: "How loaded the team already is. 50% means half the team is busy and half is free. Free team is what new work can use, including items that run at the same time.",
+  },
+  title: {
+    label: "Backlog item",
+    text: "The name of the work. What you would put on a ticket: the feature, patch, or keep-the-lights-on job you are scoring.",
+  },
+  workType: {
+    label: "Kind",
+    text: "What kind of work this is. Feature competes on score. Lights on, security patch, reliability, and legal/compliance are must-dos — they start before ordinary features.",
+  },
+  reach: {
+    label: "Reach",
+    text: "How many people this will affect in a given period — customers, users, or accounts. Higher reach raises the RICE score.",
+  },
+  impact: {
+    label: "Impact",
+    text: "How much it helps each person reached. min is a tiny improvement, low is slight, med is noticeable, high is a clear win, mass is a game-changer for those users.",
+  },
+  confidence: {
+    label: "Conf. %",
+    text: "How sure you are about reach, impact, and effort. 100% means the numbers are solid. 50% means you are guessing — RICE treats the idea as half as strong.",
+  },
+  effort: {
+    label: "Effort days",
+    text: "How many days this item takes to finish. Used in RICE (more days = lower score) and for parallel work: a side item can only run with a main item if it finishes no later.",
+  },
+  loadPct: {
+    label: "Takes %",
+    text: "How much of the team this item uses while it is in progress. A 40% item and a 10% item can run together if 50% of the team is free, as long as the 10% item is not slower than the 40% item.",
+  },
+  revenue: {
+    label: "Revenue $",
+    text: "Expected revenue this item unlocks — new sales, expansion, or usage. Compared against effort when ranking.",
+  },
+  roi: {
+    label: "ROI ×",
+    text: "Return on investment as a multiple. 3× means you expect about three dollars back for each dollar of effort. Higher is better.",
+  },
+  deal: {
+    label: "Deal",
+    text: "Go/no-go: whether a customer signs up or expands only if this ships. None means no deal is tied to the item.",
+  },
+  dealValue: {
+    label: "Deal $",
+    text: "Dollar value of that go/no-go deal. Used only when Deal is signup or expansion.",
+  },
+  churn: {
+    label: "Churn if skipped",
+    text: "How likely customers are to leave if you do not build this. None, low, medium, or high. Pairs with ARR at risk.",
+  },
+  churnArr: {
+    label: "ARR at risk $",
+    text: "Annual recurring revenue you could lose if this is skipped. A high churn flag with large ARR at risk pulls the item up the list.",
+  },
+  debtAdded: {
+    label: "Debt added",
+    text: "How much technical debt this work creates — shortcuts, extra complexity, or cleanup later. More debt added hurts the rank.",
+  },
+  debtReduced: {
+    label: "Debt reduced",
+    text: "How much existing technical debt this work pays down. Reducing debt helps the rank.",
+  },
+  blocksOthers: {
+    label: "Blocks others",
+    text: "Check this if other work cannot start until this ships. That makes it more urgent.",
+  },
+  compliance: {
+    label: "Compliance",
+    text: "Check this if the item is needed for a legal, security, or audit requirement, even when Kind is not Legal/compliance.",
+  },
+  timeSensitive: {
+    label: "Time-sensitive",
+    text: "Check this if there is a real deadline — a launch window, contract date, or seasonal moment that will pass.",
+  },
+  blockedBy: {
+    label: "Blocked by other work",
+    text: "Check this if this item cannot start until something else is done. That lowers urgency so you do not pretend it can ship now.",
+  },
+  provider: {
+    label: "Platform",
+    text: "Where to import open backlog items from: Linear, GitHub Issues, or Jira.",
+  },
+  token: {
+    label: "Token",
+    text: "A personal API key for that platform. Used once for this import and not saved on the server.",
+  },
+  scope: {
+    label: "Repo / JQL",
+    text: "GitHub: owner/repo. Jira: optional JQL to filter issues. Linear does not need this.",
+  },
+  jiraHost: {
+    label: "Jira site",
+    text: "Your Jira cloud host, like your-team.atlassian.net.",
+  },
+  jiraEmail: {
+    label: "Jira email",
+    text: "The Atlassian account email that owns the API token.",
+  },
+  draft: {
+    label: "Source material",
+    text: "Paste interviews, tickets, or feature asks — usually one thought per line. Opportunities clusters this into ranked problems. Primitives looks for the smallest shared build.",
+  },
+};
+
+function setGlossaryOpen(open) {
+  els.defineBody.hidden = !open;
+  els.defineToggle.setAttribute("aria-expanded", open ? "true" : "false");
+  document.querySelector(".app").classList.toggle("glossary-open", open);
+}
+
+function showDefinition(key, open = true) {
+  const def = DEFINITIONS[key];
+  if (!def) return;
+  els.definePick.value = key;
+  els.defineCurrent.textContent = def.label;
+  els.defineText.textContent = def.text;
+  if (open) setGlossaryOpen(true);
+}
+
+function definitionKey(el) {
+  if (!el || !el.getAttribute) return "";
+  return el.dataset.define || el.dataset.f || "";
+}
+
+function fillDefinitionPick() {
+  els.definePick.innerHTML = Object.entries(DEFINITIONS)
+    .map(([key, def]) => `<option value="${key}">${def.label}</option>`)
+    .join("");
 }
 
 function applyMode() {
@@ -799,6 +938,25 @@ els.importBtn.addEventListener("click", importBacklog);
 
 els.addRow.addEventListener("click", () => {
   els.boardBody.insertAdjacentHTML("beforeend", rowHtml(emptyItem()));
+});
+
+fillDefinitionPick();
+els.defineToggle.addEventListener("click", () => {
+  const opening = els.defineBody.hidden;
+  if (opening) showDefinition(els.definePick.value || "capacity", true);
+  else setGlossaryOpen(false);
+});
+els.definePick.addEventListener("change", () => {
+  showDefinition(els.definePick.value, true);
+});
+document.addEventListener("focusin", (event) => {
+  if (els.define.contains(event.target)) return;
+  const key = definitionKey(event.target);
+  if (key) showDefinition(key);
+});
+document.addEventListener("click", (event) => {
+  const header = event.target.closest("th[data-define]");
+  if (header) showDefinition(header.dataset.define);
 });
 
 els.run.addEventListener("click", () => {
