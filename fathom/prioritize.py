@@ -71,13 +71,34 @@ def unique(items: list) -> list:
     return out
 
 
-def _order_why(item: dict, role: str, room: float, wave: int, anchor: dict | None = None) -> str:
+def _join_and(names: list[str]) -> str:
+    names = [name for name in names if name]
+    if not names:
+        return ""
+    if len(names) == 1:
+        return names[0]
+    if len(names) == 2:
+        return f"{names[0]} and {names[1]}"
+    return f"{', '.join(names[:-1])}, and {names[-1]}"
+
+
+def _order_why(item: dict, role: str, room: float, wave: int, wave_items: list | None = None) -> str:
     if role == "blocked":
         return f"Wait — this takes {item['loadPct']:g}% of the team and only {room:g}% is free."
-    if role == "side" and anchor:
+    when = (
+        f"Start now while {room:g}% of the team is free."
+        if wave == 1
+        else "Next after the previous wave finishes."
+    )
+    mates = wave_items or [item]
+    if len(mates) > 1:
+        extras = _join_and([mate["title"] for mate in mates[1:]])
+        one = len(mates) == 2
+        verb = "runs" if one else "run"
+        finish = "finishes" if one else "finish"
         return (
-            f"Run with {anchor['title']}: leftover team capacity, and {item['effort']:g} days "
-            f"finishes no later than that job."
+            f"{extras} {verb} in parallel and {finish} no later than {item['title']} "
+            f"({item['effort']:g} days). {when}"
         )
     if item.get("must"):
         reason = f"{item.get('workLabel') or 'Required work'} — it has to ship"
@@ -87,9 +108,7 @@ def _order_why(item: dict, role: str, room: float, wave: int, anchor: dict | Non
         reason = "Skipping it risks churn"
     else:
         reason = f"Highest remaining RICE ({item.get('rice')})"
-    if wave == 1:
-        return f"{reason}. Start now while {room:g}% of the team is free."
-    return f"{reason}. Next after the previous wave finishes."
+    return f"{reason}. {when}"
 
 
 def prioritize(payload: dict) -> dict:
@@ -223,7 +242,7 @@ def prioritize(payload: dict) -> dict:
         remaining = [item for item in remaining if item["id"] not in taken]
 
     now, later = [], []
-    step = 0
+    plan = []
     for index, wave in enumerate(waves):
         titles = [item["title"] for item in wave]
         ids = [item["id"] for item in wave]
@@ -231,24 +250,22 @@ def prioritize(payload: dict) -> dict:
         duration = max(item["effort"] for item in wave)
         when = "this period" if index == 0 else "later"
         anchor = wave[0]
-        for offset, item in enumerate(wave):
-            step += 1
+        step = index + 1
+        plan_title = _join_and(titles)
+        rationale = _order_why(anchor, "main", room, step, wave)
+        plan.append({"step": step, "title": plan_title, "rationale": rationale, "wave": step})
+        for item in wave:
             others = [title for title in titles if title != item["title"]]
             item["when"] = when
-            item["wave"] = index + 1
+            item["wave"] = step
             item["waveLoad"] = load
             item["waveDuration"] = duration
             item["parallelIds"] = [item_id for item_id in ids if item_id != item["id"]]
             item["parallelTitles"] = others
             item["step"] = step
-            item["parallelWith"] = None if offset == 0 else anchor["title"]
-            item["rationale"] = _order_why(
-                item,
-                "main" if offset == 0 else "side",
-                room,
-                index + 1,
-                anchor,
-            )
+            item["planTitle"] = plan_title
+            item["parallelWith"] = None
+            item["rationale"] = rationale
             (now if index == 0 else later).append(item)
     for item in remaining:
         item["when"] = "later"
@@ -279,6 +296,7 @@ def prioritize(payload: dict) -> dict:
         "mustDays": must_days,
         "dealValueNow": deal_now,
         "churnProtected": round(churn_protected, 0),
+        "plan": plan,
         "items": ranked,
         "nowIds": [i["id"] for i in now],
         "laterIds": [i["id"] for i in later],

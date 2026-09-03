@@ -549,22 +549,32 @@ function renderPrimitives() {
 
 function renderPriority() {
   const items = state.result.items;
-  const scheduled = items.filter((item) => item.wave);
+  const scheduled =
+    state.result.plan ||
+    Object.values(
+      items
+        .filter((item) => item.wave)
+        .reduce((waves, item) => {
+          if (!waves[item.wave]) {
+            waves[item.wave] = {
+              step: item.step,
+              title: item.planTitle || item.title,
+              rationale: item.rationale,
+            };
+          }
+          return waves;
+        }, {}),
+    );
   const blocked = items.filter((item) => !item.wave);
   els.list.innerHTML = "";
-  const row = (item) => {
-    const parallel = item.parallelWith
-      ? ` <span class="plan-par">(in parallel with ${escapeHtml(item.parallelWith)})</span>`
-      : "";
-    return `
+  const row = (item) => `
       <li class="plan-row">
         <span class="plan-num">${item.step}.</span>
         <div>
-          <p class="plan-name">${escapeHtml(item.title)}${parallel}</p>
+          <p class="plan-name">${escapeHtml(item.title)}</p>
           <p class="plan-why">${escapeHtml(item.rationale || "")}</p>
         </div>
       </li>`;
-  };
   els.story.innerHTML = `
     <p class="kicker">Build order</p>
     <h1>What to do, in order</h1>
