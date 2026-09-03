@@ -106,6 +106,7 @@ const els = {
   definePick: document.getElementById("define-pick"),
   defineText: document.getElementById("define-text"),
   defineCurrent: document.getElementById("define-current"),
+  shell: document.getElementById("shell"),
 };
 
 const recorder = {
@@ -387,8 +388,13 @@ function applyMode() {
   els.run.textContent = copy.run;
   els.sourceLabel.textContent = copy.source;
   els.barTitle.textContent = state.view === "chooser" ? "Choose a workspace" : copy.bar;
+  if (state.view === "chooser") {
+    delete els.shell.dataset.mode;
+  } else {
+    els.shell.dataset.mode = state.mode;
+  }
   els.start.classList.toggle("is-wide", state.mode === "priority");
-  const ingest = state.view === "ingest" && !state.result;
+  const ingest = state.view === "ingest";
   els.connect.hidden = !((state.mode === "requests" || state.mode === "priority") && ingest);
   els.priorityPanel.hidden = !(state.mode === "priority" && ingest);
   els.source.hidden = state.mode === "priority" || !ingest;
@@ -399,11 +405,10 @@ function applyMode() {
 }
 
 function showView() {
-  const has = Boolean(state.result);
-  els.chooser.hidden = has || state.view !== "chooser";
-  els.start.hidden = has || state.view !== "ingest";
-  els.results.hidden = !has;
-  els.back.hidden = state.view === "chooser" && !has;
+  els.chooser.hidden = state.view !== "chooser";
+  els.start.hidden = state.view !== "ingest";
+  els.results.hidden = state.view !== "results";
+  els.back.hidden = state.view === "chooser";
   applyMode();
 }
 
@@ -459,6 +464,7 @@ async function analyze(payload) {
     }
     state.kindFilter = "all";
     state.showAll = false;
+    state.view = "results";
     render();
   } catch (err) {
     showError(err.message || "Couldn’t analyze that. Check the format and try again.");
@@ -549,22 +555,32 @@ function renderPrimitives() {
 
 function renderPriority() {
   const items = state.result.items;
-  const scheduled = items.filter((item) => item.wave);
+  const scheduled =
+    state.result.plan ||
+    Object.values(
+      items
+        .filter((item) => item.wave)
+        .reduce((waves, item) => {
+          if (!waves[item.wave]) {
+            waves[item.wave] = {
+              step: item.step,
+              title: item.planTitle || item.title,
+              rationale: item.rationale,
+            };
+          }
+          return waves;
+        }, {}),
+    );
   const blocked = items.filter((item) => !item.wave);
   els.list.innerHTML = "";
-  const row = (item) => {
-    const parallel = item.parallelWith
-      ? ` <span class="plan-par">(in parallel with ${escapeHtml(item.parallelWith)})</span>`
-      : "";
-    return `
+  const row = (item) => `
       <li class="plan-row">
         <span class="plan-num">${item.step}.</span>
         <div>
-          <p class="plan-name">${escapeHtml(item.title)}${parallel}</p>
+          <p class="plan-name">${escapeHtml(item.title)}</p>
           <p class="plan-why">${escapeHtml(item.rationale || "")}</p>
         </div>
       </li>`;
-  };
   els.story.innerHTML = `
     <p class="kicker">Build order</p>
     <h1>What to do, in order</h1>
@@ -861,6 +877,19 @@ async function importBacklog() {
   }
 }
 
+function goBack() {
+  stopListening();
+  showError("");
+  if (state.view === "results") {
+    state.result = null;
+    state.view = "ingest";
+    els.results.classList.remove("is-plan");
+  } else {
+    state.view = "chooser";
+  }
+  showView();
+}
+
 function reset() {
   stopListening();
   state.result = null;
@@ -889,7 +918,7 @@ els.sample.addEventListener("click", async () => {
   }
   analyze({ useSample: true });
 });
-els.back.addEventListener("click", reset);
+els.back.addEventListener("click", goBack);
 els.home.addEventListener("click", (event) => {
   event.preventDefault();
   reset();
