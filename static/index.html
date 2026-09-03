@@ -30,10 +30,12 @@
 
       <div class="main">
         <header class="bar">
-          <div class="bar-lead">
-            <button class="back-btn" id="back" type="button" hidden>Back</button>
-            <p class="bar-title" id="bar-title">Choose a workspace</p>
-          </div>
+          <p class="bar-title" id="bar-title">Choose a workspace</p>
+          <nav class="bar-tabs" id="bar-tabs" hidden>
+            <button type="button" class="bar-tab" data-mode="requests">Primitives</button>
+            <button type="button" class="bar-tab" data-mode="feedback">Opportunities</button>
+            <button type="button" class="bar-tab" data-mode="priority">Priorities</button>
+          </nav>
         </header>
 
         <section class="chooser" id="chooser">
@@ -156,15 +158,17 @@
             </div>
           </div>
           <p class="error" id="error" hidden></p>
-          <div class="bench-run">
-            <button class="primary" id="run" type="button">Run</button>
-            <button class="text-btn" id="sample" type="button">Load sample</button>
-          </div>
         </section>
 
         <div class="results" id="results" hidden>
           <nav class="list" id="list"></nav>
           <article class="story" id="story"></article>
+        </div>
+
+        <div class="bench-run" id="bench-run" hidden>
+          <button class="primary" id="run" type="button">Run</button>
+          <button class="text-btn" id="sample" type="button">Load sample</button>
+          <button class="back-btn" id="back" type="button">Go back</button>
         </div>
       </div>
     </div>

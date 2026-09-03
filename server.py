@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -95,8 +96,9 @@ class Server(ThreadingHTTPServer):
 
 
 def main() -> None:
-    host = "127.0.0.1"
-    port = 3335
+    # Local default: localhost:3335. Hosted platforms set PORT and need 0.0.0.0.
+    host = os.environ.get("HOST", "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1")
+    port = int(os.environ.get("PORT", "3335"))
     server = Server((host, port), Handler)
     print(f"POP running at http://{host}:{port}", flush=True)
     server.serve_forever()

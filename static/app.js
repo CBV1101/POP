@@ -107,6 +107,8 @@ const els = {
   defineText: document.getElementById("define-text"),
   defineCurrent: document.getElementById("define-current"),
   shell: document.getElementById("shell"),
+  barTabs: document.getElementById("bar-tabs"),
+  benchRun: document.getElementById("bench-run"),
 };
 
 const recorder = {
@@ -387,7 +389,8 @@ function applyMode() {
   els.draft.placeholder = copy.placeholder;
   els.run.textContent = copy.run;
   els.sourceLabel.textContent = copy.source;
-  els.barTitle.textContent = state.view === "chooser" ? "Choose a workspace" : copy.bar;
+  els.barTitle.hidden = state.view !== "chooser";
+  els.barTabs.hidden = state.view === "chooser";
   if (state.view === "chooser") {
     delete els.shell.dataset.mode;
   } else {
@@ -399,7 +402,7 @@ function applyMode() {
   els.priorityPanel.hidden = !(state.mode === "priority" && ingest);
   els.source.hidden = state.mode === "priority" || !ingest;
   els.record.hidden = state.mode === "priority" || recorder.active;
-  document.querySelectorAll(".nav-item").forEach((btn) => {
+  document.querySelectorAll(".nav-item, .bar-tab").forEach((btn) => {
     btn.classList.toggle("on", state.view !== "chooser" && btn.dataset.mode === state.mode);
   });
 }
@@ -408,6 +411,9 @@ function showView() {
   els.chooser.hidden = state.view !== "chooser";
   els.start.hidden = state.view !== "ingest";
   els.results.hidden = state.view !== "results";
+  els.benchRun.hidden = state.view === "chooser";
+  els.run.hidden = state.view !== "ingest";
+  els.sample.hidden = state.view !== "ingest";
   els.back.hidden = state.view === "chooser";
   applyMode();
 }
@@ -926,7 +932,7 @@ els.home.addEventListener("click", (event) => {
 els.record.addEventListener("click", startListening);
 els.stop.addEventListener("click", stopListening);
 
-document.querySelectorAll(".nav-item, .choice").forEach((btn) => {
+document.querySelectorAll(".nav-item, .choice, .bar-tab").forEach((btn) => {
   btn.addEventListener("click", () => openWorkspace(btn.dataset.mode));
 });
 
