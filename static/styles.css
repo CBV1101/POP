@@ -117,12 +117,26 @@ a { color: inherit; text-decoration: none; }
   position: relative;
 }
 
-.bar-lead {
+.bar-tabs {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 4px;
   min-width: 0;
 }
+
+.bar-tab {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.bar-tab:hover { color: var(--ink); }
+
+.bar-tab[data-mode="requests"].on { color: var(--m1); }
+.bar-tab[data-mode="feedback"].on { color: var(--m2); }
+.bar-tab[data-mode="priority"].on { color: var(--m3); }
 
 .back-btn {
   border: 1px solid var(--line);
@@ -501,7 +515,8 @@ a { color: inherit; text-decoration: none; }
 .define-body[hidden] { display: none !important; }
 
 .bench-run {
-  margin-top: 16px;
+  margin-top: 0;
+  padding: 16px 32px 72px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -737,6 +752,10 @@ a { color: inherit; text-decoration: none; }
 .error[hidden],
 .text-btn[hidden],
 .back-btn[hidden],
+.primary[hidden],
+.bar-title[hidden],
+.bar-tabs[hidden],
+.bench-run[hidden],
 .connect[hidden],
 .fields label[hidden],
 .priority-panel[hidden],

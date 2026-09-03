@@ -32,7 +32,7 @@ Score the backlog and get a schedule, not just a sorted list.
 
 Must-dos and high-priority work start first. Leftover team capacity can run **in parallel** with smaller items that finish no later than the main one. Output is ranked waves: what to start now, what runs together, and what waits.
 
-## Run
+## Run locally
 
 Python 3.9+ (standard library only — no npm).
 
@@ -45,3 +45,18 @@ Open [http://127.0.0.1:3335](http://127.0.0.1:3335)
 Each workspace has a **Load sample** button if you want to see it before using your own data.
 
 Backlog import uses your API token once for that request. Tokens are not stored on the server.
+
+## Host a public URL (Render)
+
+So other people can open POP in their browser:
+
+1. Push this repo to GitHub (already at [CBV1101/POP](https://github.com/CBV1101/POP)).
+2. Sign up at [render.com](https://render.com) and connect GitHub.
+3. **New → Blueprint** and select the `POP` repo (uses `render.yaml`), **or** **New → Web Service** with:
+   - Runtime: Python 3
+   - Build: `pip install -r requirements.txt`
+   - Start: `python server.py`
+   - Instance: Free
+4. After deploy, Render gives you a URL like `https://pop-xxxx.onrender.com` — share that.
+
+Free instances sleep after idle time; the first visit after sleep can take ~30 seconds.
