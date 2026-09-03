@@ -471,6 +471,7 @@ async function analyze(payload) {
 function render() {
   showView();
   if (!state.result) return;
+  els.results.classList.toggle("is-plan", state.result.kind === "priority");
   if (state.result.kind === "primitives") {
     renderPrimitives();
     return;
@@ -548,82 +549,48 @@ function renderPrimitives() {
 
 function renderPriority() {
   const items = state.result.items;
-  const selected = items.find((p) => p.id === state.selectedId) || items[0];
-  els.list.innerHTML = `
-    <h2>${escapeHtml(state.result.summary)}</h2>
-    ${items
-      .map(
-        (p, i) => `
-      <button type="button" class="item ${selected.id === p.id ? "active" : ""}" data-id="${p.id}">
-        <div class="title">${i + 1}. ${escapeHtml(p.title)}</div>
-        <div class="meta ${p.when === "this period" ? "when-now" : "when-later"}">${
-          p.wave
-            ? `wave ${p.wave}${p.parallelTitles && p.parallelTitles.length ? ` · with ${escapeHtml(p.parallelTitles[0])}${p.parallelTitles.length > 1 ? ` +${p.parallelTitles.length - 1}` : ""}` : ""}`
-            : "can't start"
-        }</div>
-      </button>`,
-      )
-      .join("")}
-  `;
-  bindList(items);
-
-  const deal = selected.deal === "signup" ? "Customer signs up if this ships" : selected.deal === "expansion" ? "Customer expands if this ships" : "No go/no-go deal attached";
-  const churn =
-    selected.churn !== "none"
-      ? `${money(selected.churnArr)} ARR at ${selected.churn} risk if this is skipped`
-      : "No churn flag if skipped";
+  const scheduled = items.filter((item) => item.wave);
+  const blocked = items.filter((item) => !item.wave);
+  els.list.innerHTML = "";
+  const row = (item) => {
+    const parallel = item.parallelWith
+      ? ` <span class="plan-par">(in parallel with ${escapeHtml(item.parallelWith)})</span>`
+      : "";
+    return `
+      <li class="plan-row">
+        <span class="plan-num">${item.step}.</span>
+        <div>
+          <p class="plan-name">${escapeHtml(item.title)}${parallel}</p>
+          <p class="plan-why">${escapeHtml(item.rationale || "")}</p>
+        </div>
+      </li>`;
+  };
   els.story.innerHTML = `
-    <p class="kicker">${
-      selected.wave
-        ? `Wave ${selected.wave}${selected.when === "this period" ? " · start now" : " · after the previous wave"}`
-        : "Can't start — needs more free team"
-    } · ${daysLabel(selected.effort)} · ${selected.loadPct}% of the team</p>
-    <h1>${escapeHtml(selected.title)}</h1>
-    <div class="facts">
-      <span><strong>${selected.score}</strong> composite</span>
-      <span><strong>${selected.rice}</strong> RICE</span>
-      <span><strong>${state.result.capacity}%</strong> capacity</span>
-      <span><strong>${state.result.room}%</strong> still free</span>
-      <span><strong>${money(state.result.dealValueNow)}</strong> deals in the cut</span>
-      <span><strong>${money(state.result.churnProtected)}</strong> churn protected</span>
-    </div>
-    <p class="summary">${(selected.why || []).join(" · ") || "Ranked on relative RICE, commercial value, risk, debt, and urgency."}</p>
+    <p class="kicker">Build order</p>
+    <h1>What to do, in order</h1>
+    <p class="summary">${escapeHtml(state.result.summary)}</p>
+    <ol class="plan">
+      ${scheduled.map(row).join("")}
+    </ol>
     ${
-      selected.parallelTitles && selected.parallelTitles.length
-        ? `<div class="block">
-            <h2>In parallel</h2>
-            <ul class="ways">${selected.parallelTitles.map((title) => `<li>${escapeHtml(title)}</li>`).join("")}
-            <li>Together ${selected.waveLoad}% of the team for ${selected.waveDuration} days. Side items finish no later than the main one.</li>
-            </ul>
-          </div>`
-        : selected.wave
-          ? `<div class="block"><h2>In parallel</h2><p class="summary">This wave is this item on its own (${selected.waveLoad}% of the team).</p></div>`
-          : ""
+      blocked.length
+        ? `<h2 class="plan-hold">Cannot start yet</h2>
+           <ul class="plan">
+             ${blocked
+               .map(
+                 (item) => `
+               <li class="plan-row">
+                 <span class="plan-num">—</span>
+                 <div>
+                   <p class="plan-name">${escapeHtml(item.title)}</p>
+                   <p class="plan-why">${escapeHtml(item.rationale || "")}</p>
+                 </div>
+               </li>`,
+               )
+               .join("")}
+           </ul>`
+        : ""
     }
-    <div class="block">
-      <h2>Why this rank</h2>
-      <ul class="ways">${(selected.why || []).map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ul>
-    </div>
-    <div class="block">
-      <h2>Commercial and risk</h2>
-      <ul class="ways">
-        <li>${escapeHtml(selected.workLabel || "Feature")}${selected.must ? " — takes days before feature work" : ""}</li>
-        <li>${escapeHtml(deal)}${selected.dealValue ? ` (${money(selected.dealValue)})` : ""}</li>
-        <li>${escapeHtml(churn)}</li>
-        <li>Revenue ${money(selected.revenue)} · ${selected.roi || 0}× ROI</li>
-        <li>Debt added ${selected.debtAdded}, reduced ${selected.debtReduced}</li>
-      </ul>
-    </div>
-    <div class="block">
-      <h2>RICE</h2>
-      <ul class="ways">
-        <li>Reach ${selected.reach}</li>
-        <li>Impact ${IMPACT_LABEL[String(selected.impact)] || selected.impact}</li>
-        <li>Confidence ${selected.confidence}%</li>
-        <li>Effort ${selected.effort} days</li>
-        <li>Takes ${selected.loadPct}% of the team</li>
-      </ul>
-    </div>
   `;
 }
 
@@ -898,6 +865,7 @@ function reset() {
   stopListening();
   state.result = null;
   state.view = "chooser";
+  els.results.classList.remove("is-plan");
   showError("");
   showView();
 }

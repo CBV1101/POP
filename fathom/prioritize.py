@@ -71,6 +71,27 @@ def unique(items: list) -> list:
     return out
 
 
+def _order_why(item: dict, role: str, room: float, wave: int, anchor: dict | None = None) -> str:
+    if role == "blocked":
+        return f"Wait — this takes {item['loadPct']:g}% of the team and only {room:g}% is free."
+    if role == "side" and anchor:
+        return (
+            f"Run with {anchor['title']}: leftover team capacity, and {item['effort']:g} days "
+            f"finishes no later than that job."
+        )
+    if item.get("must"):
+        reason = f"{item.get('workLabel') or 'Required work'} — it has to ship"
+    elif item.get("deal") != "none" and _num(item.get("dealValue")):
+        reason = "A customer deal depends on this"
+    elif (item.get("churn") or "none") in {"high", "medium"}:
+        reason = "Skipping it risks churn"
+    else:
+        reason = f"Highest remaining RICE ({item.get('rice')})"
+    if wave == 1:
+        return f"{reason}. Start now while {room:g}% of the team is free."
+    return f"{reason}. Next after the previous wave finishes."
+
+
 def prioritize(payload: dict) -> dict:
     items = payload.get("items") or []
     if not items:
@@ -202,13 +223,16 @@ def prioritize(payload: dict) -> dict:
         remaining = [item for item in remaining if item["id"] not in taken]
 
     now, later = [], []
+    step = 0
     for index, wave in enumerate(waves):
         titles = [item["title"] for item in wave]
         ids = [item["id"] for item in wave]
         load = round(sum(item["loadPct"] for item in wave), 1)
         duration = max(item["effort"] for item in wave)
         when = "this period" if index == 0 else "later"
-        for item in wave:
+        anchor = wave[0]
+        for offset, item in enumerate(wave):
+            step += 1
             others = [title for title in titles if title != item["title"]]
             item["when"] = when
             item["wave"] = index + 1
@@ -216,10 +240,15 @@ def prioritize(payload: dict) -> dict:
             item["waveDuration"] = duration
             item["parallelIds"] = [item_id for item_id in ids if item_id != item["id"]]
             item["parallelTitles"] = others
-            if others:
-                item["why"] = unique(
-                    [f"Runs with {', '.join(others)} ({load:g}% of the team, {duration:g} days)"] + item["why"]
-                )[:4]
+            item["step"] = step
+            item["parallelWith"] = None if offset == 0 else anchor["title"]
+            item["rationale"] = _order_why(
+                item,
+                "main" if offset == 0 else "side",
+                room,
+                index + 1,
+                anchor,
+            )
             (now if index == 0 else later).append(item)
     for item in remaining:
         item["when"] = "later"
@@ -228,9 +257,9 @@ def prioritize(payload: dict) -> dict:
         item["waveDuration"] = item["effort"]
         item["parallelIds"] = []
         item["parallelTitles"] = []
-        item["why"] = unique(
-            [f"Needs {item['loadPct']:g}% of the team; only {room:g}% is free"] + item["why"]
-        )[:4]
+        item["step"] = None
+        item["parallelWith"] = None
+        item["rationale"] = _order_why(item, "blocked", room, 0)
         later.append(item)
     ranked = now + later
     must_days = round(sum(i["effort"] for i in ranked if i["must"] and i["when"] == "this period"), 2)
@@ -240,7 +269,7 @@ def prioritize(payload: dict) -> dict:
     return {
         "kind": "priority",
         "summary": (
-            f"You're at {capacity:g}% capacity ({room:g}% free). Start these {len(now)} together."
+            f"You're at {capacity:g}% capacity ({room:g}% free). Do this in order."
             if now
             else f"You're at {capacity:g}% capacity ({room:g}% free). Nothing fits in parallel yet."
         ),
